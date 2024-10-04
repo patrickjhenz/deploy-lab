@@ -1,0 +1,48 @@
+name: deploy-to-k8s
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-static-manifests:
+    permissions:             # Add the permissions key and its children required by the Deploy to Kubernetes cluster action
+      actions: read
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up kubeconfig
+        uses: azure/k8s-set-context@v4
+        with:
+          method: service-account
+          k8s-url: https://3.17.152.189:6443
+          k8s-secret: |
+            apiVersion: v1
+            data:
+              ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJRkpsWFRkbXJVcjB3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TkRFd01EUXhPVE0yTkRGYUZ3MHpOREV3TURJeE9UUXhOREZhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURYRjJtTHVORldQb1VkREpOMDMyTnJQL1ZuZkdoRjJ6S1FoN1FqOGJrbUEzcUcwQW82Y3VjSWFKM3EKZWVNZUx3KzZRakczdlJxRERQMlFCRGVXVmZoSGdrVlJrSDBtQlN4MGFIbHF4dHFJYVFaNFFjN25Ta0x4TkZBVApSbTB4alpZVlpybjhuQnVFL2VzWDFuMGFhMjZIdW5DQkxQa0ExdTFhb29MZVM1VGJZTGlyOUNmajQrQllHY0diCmVTMk4xcjEzMHBDdnlNcGJDa0U0aGRQVzB4cmFuSzZuTFdKSzFIRHQ0VTJDV2w5aGlCVTdwNnFCRktJUVRRMTkKVWE1TkExRnpzdnhrdHdVcVJ6SzZCRTFEZVJudDVLWWhqcWZVaG9kOEh6U1d5cHZEdXhxQzIwaDYyalphQ3NPWQpZOUVwb0pHK2w3TXhTaGlHOUxmV3VqQ3kybjJ4QWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJTOWVzRlFiTHM2Ti9qVmkzM0FEUW1iZ1pubTdEQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQVdaNmV6dFdtSApiVDFQNXVDMFlPOXlMMGFLQUErNmJ1Rm5xNVA5RUdvL0NEbVNVZkVnRU5BUkxSWjBzZVdQbGJtOGJ0ZHF0clVVCm5CRzN5K0FGbHBiZ0MrRHhzZlZrbmdFRzdQRDBxYnV0cHZJcDZBVWcvWk1hOFZ6KzcxaFhWMHp5QU9RVWFFT2oKaGMzVXhsMDdnZGpEcXhPUjg2cWJMM0Z3bW8vNUFXd2oyV1lPM3hsVGppaWlCeUcyV3FGemxzd3FoZWpHT280VQpwdjFuT08vTnNTSXErb1VGK2U3NXNEcmtuNUNZMFNjbExYdUltbUZHT3hJN3J1Y2d4aS9Kb1MyU3MxMiszdzJhCmpqUlp1a2Jabk1YRzlaMGJxWm9XU3VFOG9GREMwM2FvV1Q5bmk1WnhPcVhpUys3a1JGTWxmYUN4K3Fwd1hjOUYKZE5oNnlFanl4ZWJPCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+              namespace: ZGVmYXVsdA==
+              token: ZXlKaGJHY2lPaUpTVXpJMU5pSXNJbXRwWkNJNklsaGpXWEpqUlUxVlpIaG5hbWhJVjB0TlpIRldjV3RYYWw5TGVEUkVlRnBTVkdWc1QyaFViVWhMUkc4aWZRLmV5SnBjM01pT2lKcmRXSmxjbTVsZEdWekwzTmxjblpwWTJWaFkyTnZkVzUwSWl3aWEzVmlaWEp1WlhSbGN5NXBieTl6WlhKMmFXTmxZV05qYjNWdWRDOXVZVzFsYzNCaFkyVWlPaUprWldaaGRXeDBJaXdpYTNWaVpYSnVaWFJsY3k1cGJ5OXpaWEoyYVdObFlXTmpiM1Z1ZEM5elpXTnlaWFF1Ym1GdFpTSTZJbWRvWVMxellTMXpaV055WlhRaUxDSnJkV0psY201bGRHVnpMbWx2TDNObGNuWnBZMlZoWTJOdmRXNTBMM05sY25acFkyVXRZV05qYjNWdWRDNXVZVzFsSWpvaVoyaGhJaXdpYTNWaVpYSnVaWFJsY3k1cGJ5OXpaWEoyYVdObFlXTmpiM1Z1ZEM5elpYSjJhV05sTFdGalkyOTFiblF1ZFdsa0lqb2lNekExWW1VNU5HUXRaR1ZoTXkwMFpUVTVMV0l4WWpRdE5HUmpZamMyTXpRelpUVXpJaXdpYzNWaUlqb2ljM2x6ZEdWdE9uTmxjblpwWTJWaFkyTnZkVzUwT21SbFptRjFiSFE2WjJoaEluMC5LUlJqdkY2RG03UEdUVFlsOUZqLUZWajQyY0w1bXpvN3BQalVPSF9QdGNvdEZOdUs2MXQ0VkdHQmFjTHpKODZMd0VkbldNZm1xUlhVUDBpWGNCZGY4VG1oN3RyVTl3Ql9YQlBtTDRTWEJLUW54U3RDekhiT2p3Z1ROMGQ1bHRjanRTLTltRnhtZkg5Q0psZUdNdDJ2OGljTWdMVWg1aEtKdi15bWZ3dkFzSE00blY4WG9XaXlzcDZmam41aHA2ZW4tYWwzVHpjV1dVdFJNYW1qSUF6QzBsVlNNTGNVdzJJamo5UVNBV3drbzBUSWJfSXFhUXd0YjczNGZFZHp3ZjFBSnpSWHY3cVpRbndhS3ZndTFneHFrSEFrd1FsUHJWQ0RRaGFQOUVtSm5hbjBLc1pHU0Z4V1F3Vm5iUGJfdENoWWVRLVRrMlpOb29nMlk5YlJkLUJ5YUE=
+            kind: Secret
+            metadata:
+              annotations:
+                kubectl.kubernetes.io/last-applied-configuration: |
+                  {"apiVersion":"v1","kind":"Secret","metadata":{"annotations":{"kubernetes.io/service-account.name":"gha"},"name":"gha-sa-secret","namespace":"default"},"type":"kubernetes.io/service-account-token"}
+                kubernetes.io/service-account.name: gha
+                kubernetes.io/service-account.uid: 305be94d-dea3-4e59-b1b4-4dcb76343e53
+              creationTimestamp: "2024-10-04T19:44:07Z"
+              name: gha-sa-secret
+              namespace: default
+              resourceVersion: "740"
+              uid: 95a0e5ce-cb08-4083-8c97-4cbc7600a20f
+            type: kubernetes.io/service-account-token
+      - name: Checkout repo                           # Delete the "Get pods" step and add these steps
+        uses: actions/checkout@v4
+      - name: Deploy manifests
+        uses: azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: |
+              manifests/dep.yaml
+              manifests/svc.yaml
+          namespace: default
+          pull-images: false
